@@ -11,9 +11,9 @@ public class ShellCommandBean {
 	    System.out.println("stdout of 'id':");
 	    Process p = LinuxCommand.runFromRoot("id",password);
 	    System.out.print(streamToString(p.getInputStream()));
-	    System.out.println("stdout of 'fdisk -l':");
-	    p = LinuxCommand.runFromRoot("fdisk -l",password);
-	    System.out.print(streamToString(p.getInputStream()));
+//	    System.out.println("stdout of 'fdisk -l':");
+//	    p = LinuxCommand.runFromRoot("fdisk -l",password);
+//	    System.out.print(streamToString(p.getInputStream()));
 	}
 
 	private static String streamToString(InputStream inputStream) {

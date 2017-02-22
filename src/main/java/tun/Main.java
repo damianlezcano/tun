@@ -10,11 +10,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
+import javax.swing.JLabel;
 import javax.swing.JSeparator;
 import javax.swing.UIManager;
 
@@ -22,13 +25,13 @@ import javax.swing.UIManager;
  *
  * @author damian
  */
-public class Controller {
+public class Main {
 
 	private static final String FILE_PID = "tun.pid";
 	
 	private View view = new View();
 	
-	private Map<String, String> hosts;
+	private Map<String, Set<String>> hosts;
 	private Map<String, String> pids;
 
 	public void init(String filename) throws IOException {
@@ -38,23 +41,40 @@ public class Controller {
 		//Procesamos el arhichivo que se relaciona el comando con el pid
 		pids = readPIDs(FILE_PID);
 
-	    Iterator it = hosts.entrySet().iterator();
-	    while (it.hasNext()) {
-	        Entry<String,String> entry = (Entry<String,String>)it.next();
-	        Item item = new Item();
-	        item.getLblTitle().setText(entry.getValue());
-	        item.getLblDescription().setText(entry.getKey());
-	        view.getContentPane().add(item);
-	        if(it.hasNext())
-	        	view.getContentPane().add(new JSeparator());
-	    }
-		
-		for (Entry<String,String> entry : hosts.entrySet()) {
+		Iterator itKey = hosts.entrySet().iterator();
+		while (itKey.hasNext()) {
+			Entry<String,Set<String>> entryKey = (Entry<String,Set<String>>)itKey.next();
+			Iterator itHost = entryKey.getValue().iterator();
+			while (itHost.hasNext()) {
+				String entryHost = (String)itHost.next();
+				Item item = build(entryHost,entryKey.getKey());
+				view.getPnlContainer().add(item);
+				if(itKey.hasNext() || itHost.hasNext()){
+					view.getPnlContainer().add(new JSeparator());					
+				}
+			}
 		}
 
 		view.setVisible(true);
 		view.pack();
 		setLookAndField();
+	}
+
+	public Item build(String title, String description){
+		Item item = new Item();
+		item.getLblTitle().setText(title);
+		item.getLblDescription().setText(description);
+		setIcon(item.getLblIcon(),pids.get(title));
+		return item;
+	}
+	
+	private void setIcon(JLabel lblIcon, String pid) {
+		if(pid == null){
+			lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("error.png")));
+		}else{
+			lblIcon.setToolTipText(String.format("PID: %s", pid));
+			lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("ok.png")));			
+		}
 	}
 
 	private Map<String, String> readPIDs(String filename) throws IOException {
@@ -71,8 +91,8 @@ public class Controller {
 		return map;
 	}
 
-	private Map<String, String> readHosts(String filename) throws IOException {
-		Map<String, String> map = new TreeMap<String, String>();
+	private Map<String, Set<String>> readHosts(String filename) throws IOException {
+		Map<String, Set<String>> map = new TreeMap<String, Set<String>>();
 		FileInputStream fstream = new FileInputStream(filename);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 		String strLine;
@@ -82,7 +102,11 @@ public class Controller {
 				if (strLine.startsWith("#")) {
 					key = strLine;
 				} else {
-					map.put(strLine, key);
+					Set<String> collection = map.containsKey(key) ? map.get(key) : new HashSet<String>();
+					if(!collection.contains(strLine)){
+						collection.add(strLine);
+					}
+					map.put(key, collection);
 				}
 			}
 		}
@@ -110,7 +134,7 @@ public class Controller {
 			return;
 		}
 
-		Controller controller = new Controller();
+		Main controller = new Main();
 		controller.init(args[0]);
 	}
 
