@@ -5,11 +5,11 @@
  */
 package tun;
 
+import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -17,9 +17,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.swing.JLabel;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.UIManager;
+
+import ar.com.q3s.shell.LinuxShellCommandBean;
+import ar.com.q3s.shell.ShellCommand;
 
 /**
  *
@@ -27,20 +30,19 @@ import javax.swing.UIManager;
  */
 public class Main {
 
-	private static final String FILE_PID = "tun.pid";
-	
+	private static final long SCANNER_SLEEP = 500;
+
 	private View view = new View();
 	
+	private ShellCommand shell = new LinuxShellCommandBean();
+	
 	private Map<String, Set<String>> hosts;
-	private Map<String, String> pids;
 
 	public void init(String filename) throws IOException {
 
 		//Proceso el archivo pasado como parametro
 		hosts = readHosts(filename);
-		//Procesamos el arhichivo que se relaciona el comando con el pid
-		pids = readPIDs(FILE_PID);
-
+		
 		Iterator itKey = hosts.entrySet().iterator();
 		while (itKey.hasNext()) {
 			Entry<String,Set<String>> entryKey = (Entry<String,Set<String>>)itKey.next();
@@ -57,38 +59,73 @@ public class Main {
 
 		view.setVisible(true);
 		view.pack();
-		setLookAndField();
+		
+		(new Thread() {
+			  public void run() {
+	            	do {
+	            		try {
+		            		for(Component component : view.getPnlContainer().getComponents()){
+		            			if(component instanceof Item){
+		            				((Item)component).evaluatePid(shell);
+		            			}
+		            		}
+		            		Thread.sleep(SCANNER_SLEEP);
+	            		} catch (Exception e) {
+	            			e.printStackTrace();
+	            		}
+					} while (true);
+			  }
+			 }).start();
+		
 	}
 
-	public Item build(String title, String description){
+	public Item build(String title, String description) throws IOException{
 		Item item = new Item();
 		item.getLblTitle().setText(title);
 		item.getLblDescription().setText(description);
-		setIcon(item.getLblIcon(),pids.get(title));
-		return item;
-	}
-	
-	private void setIcon(JLabel lblIcon, String pid) {
-		if(pid == null){
-			lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("error.png")));
-		}else{
-			lblIcon.setToolTipText(String.format("PID: %s", pid));
-			lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("ok.png")));			
-		}
-	}
+		item.evaluatePid(shell);
+		
+        item.getCheckbox().addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	try {
+            		JCheckBox combobox = (JCheckBox) evt.getSource();
+            		Item item = (Item)combobox.getParent();
+            		if(combobox.isSelected()){
+            			shell.open(item.getLblTitle().getText());
+            		}else{
+            			shell.kill(shell.pid(item.getLblTitle().getText()));
+            		}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+            }
+        });
+        
+        item.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                for(Component component : view.getPnlContainer().getComponents()){
+        			if(component instanceof Item){
+        				Item item = (Item)component;
+        				item.bgNotSelect();
+        			}
+        		}
+                Item current  = (Item)evt.getSource();
+                current.bgSelect();
+            }
+        });
 
-	private Map<String, String> readPIDs(String filename) throws IOException {
-		Map<String, String> map = new HashMap<String, String>();
-		FileInputStream fstream = new FileInputStream(filename);
-		BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-		String strLine;
-		while ((strLine = br.readLine()) != null) {
-			String[] row = strLine.split("=");
-			map.put(row[0],row[1]);
-			System.out.println(strLine);
-		}
-		br.close();
-		return map;
+        view.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                for(Component component : view.getPnlContainer().getComponents()){
+        			if(component instanceof Item){
+        				Item item = (Item)component;
+        				item.bgNotSelect();
+        			}
+        		}
+            }
+        });
+        
+		return item;
 	}
 
 	private Map<String, Set<String>> readHosts(String filename) throws IOException {
@@ -114,28 +151,29 @@ public class Main {
 		return map;
 	}
 
-	private void setLookAndField() {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-		}
-	}
-
 	/**
 	 * @param args
 	 *            the command line arguments
 	 * @throws Exception
 	 */
-	public static void main(String[] args) throws Exception {
+	public static void main(final String[] args) throws Exception {
 
 		if (args.length == 0) {
 			System.err.println("Falta pasar como parametro el archivo de host");
 			return;
 		}
 
-		Main controller = new Main();
-		controller.init(args[0]);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+            	try {
+            		Main controller = new Main();
+            		controller.init(args[0]);					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+            }
+        });
+        
 	}
 
 }

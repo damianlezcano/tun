@@ -60,4 +60,8 @@ public class LinuxCommand {
 		p.getOutputStream().flush();
 		return p;
 	}
+	
+	public static void main(String[] args) throws IOException {
+		Runtime.getRuntime().exec("kill -9 22174");
+	}
 }

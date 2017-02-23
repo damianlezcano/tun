@@ -5,8 +5,12 @@
  */
 package tun;
 
+import java.io.IOException;
+
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+
+import ar.com.q3s.shell.ShellCommand;
 
 /**
  *
@@ -35,21 +39,15 @@ public class Item extends javax.swing.JPanel {
         lblDescription = new javax.swing.JLabel();
         checkbox = new javax.swing.JCheckBox();
 
-        setBackground(new java.awt.Color(254, 254, 254));
+        bgNotSelect();
 
-        lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("ok.png"))); // NOI18N
+        lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("offline.png"))); // NOI18N
 
         lblTitle.setFont(new java.awt.Font("Arial", 0, 11)); // NOI18N
         lblTitle.setText("ssh -L 5000:192.168.1.199:5000 lberetta@192.168.1.199");
 
         lblDescription.setFont(new java.awt.Font("Arial", 1, 11)); // NOI18N
         lblDescription.setText("mercadolibre");
-
-        checkbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkboxActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -84,7 +82,6 @@ public class Item extends javax.swing.JPanel {
     private void checkboxActionPerformed(java.awt.event.ActionEvent evt) {                                         
         // TODO add your handling code here:
     }                                        
-
 
     // Variables declaration - do not modify                     
     private javax.swing.JCheckBox checkbox;
@@ -124,4 +121,25 @@ public class Item extends javax.swing.JPanel {
     public void setLblTitle(JLabel lblTitle) {
         this.lblTitle = lblTitle;
     }
+
+	public void evaluatePid(ShellCommand shell) throws IOException {
+		String pid = shell.pid(getLblTitle().getText());
+		if(pid == null){
+			lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("offline.png")));
+			checkbox.setSelected(false);
+		}else{
+			lblIcon.setToolTipText(String.format("PID: %s", pid));
+			lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("online.png")));
+			checkbox.setSelected(true);
+		}
+		
+	}
+	
+	public void bgNotSelect(){
+		setBackground(new java.awt.Color(254, 254, 254));
+	}
+	
+	public void bgSelect(){
+		setBackground(new java.awt.Color(236, 236, 236));
+	}
 }
