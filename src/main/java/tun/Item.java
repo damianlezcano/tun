@@ -10,7 +10,7 @@ import java.io.IOException;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 
-import ar.com.q3s.shell.ShellCommand;
+import tun.shell.ShellCommand;
 
 /**
  *

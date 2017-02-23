@@ -23,8 +23,9 @@ import java.util.TreeMap;
 import javax.swing.JCheckBox;
 import javax.swing.JSeparator;
 
-import ar.com.q3s.shell.LinuxShellCommandBean;
-import ar.com.q3s.shell.ShellCommand;
+import tun.shell.LinuxShellCommandBean;
+import tun.shell.ShellCommand;
+import tun.shell.ShellCommandFactory;
 
 /**
  *
@@ -36,12 +37,13 @@ public class Main {
 
 	private View view = new View();
 	
-	private ShellCommand shell = new LinuxShellCommandBean();
+	private ShellCommand shell;
 	
 	private Map<String, Set<String>> hosts;
 
 	public void init(String[] files) throws IOException {
 
+		shell = ShellCommandFactory.get();
 		//Proceso el archivo pasado como parametro
 		hosts = readHosts(files);
 		
@@ -205,7 +207,6 @@ public class Main {
 		if(spath.indexOf(".jar") > 0){
 			spath = String.format("%s%s%s",(spath.substring(0,spath.lastIndexOf(File.separator))),File.separator,spath);
 		}
-		System.out.println("### spath: " + spath);
 		return spath;
 	}
 	
