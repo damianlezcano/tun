@@ -1,7 +1,7 @@
 # tun
 Manager de tuneles ssh
 
-![Tun](https://github.com/damianlezcano/tun/captura.png)
+![Tun](captura.png)
 
 ##Requsitos
 
