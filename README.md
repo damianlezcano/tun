@@ -1,7 +1,7 @@
 # tun
 Manager de tuneles ssh
 
-
+![Tun](https://github.com/damianlezcano/tun/captura.png)
 
 ##Requsitos
 
@@ -31,4 +31,3 @@ Ejemplo
 
 	# base de datos
 	ssh -L 1521:172.76.2.32:1521 user@192.168.1.1 -N 
-
