@@ -7,18 +7,20 @@ package tun;
 
 import java.awt.Component;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
 import javax.swing.JCheckBox;
-import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
 import ar.com.q3s.shell.LinuxShellCommandBean;
@@ -38,10 +40,10 @@ public class Main {
 	
 	private Map<String, Set<String>> hosts;
 
-	public void init(String filename) throws IOException {
+	public void init(String[] files) throws IOException {
 
 		//Proceso el archivo pasado como parametro
-		hosts = readHosts(filename);
+		hosts = readHosts(files);
 		
 		Iterator itKey = hosts.entrySet().iterator();
 		while (itKey.hasNext()) {
@@ -128,6 +130,14 @@ public class Main {
 		return item;
 	}
 
+	private Map<String, Set<String>> readHosts(String[] files) throws IOException {
+		Map<String, Set<String>> map = new TreeMap<String, Set<String>>();
+		for (String filename : files) {
+			map.putAll(readHosts(filename));
+		}
+		return map;
+	}
+
 	private Map<String, Set<String>> readHosts(String filename) throws IOException {
 		Map<String, Set<String>> map = new TreeMap<String, Set<String>>();
 		FileInputStream fstream = new FileInputStream(filename);
@@ -150,16 +160,18 @@ public class Main {
 		br.close();
 		return map;
 	}
-
+	
 	/**
 	 * @param args
 	 *            the command line arguments
 	 * @throws Exception
 	 */
-	public static void main(final String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {
 
-		if (args.length == 0) {
-			System.err.println("Falta pasar como parametro el archivo de host");
+		final String[] files = processPath(args);
+		
+		if (files.length == 0) {
+			System.err.println("Falta pasar como parametro el archivo de host valido");
 			return;
 		}
 
@@ -167,13 +179,38 @@ public class Main {
             public void run() {
             	try {
             		Main controller = new Main();
-            		controller.init(args[0]);					
+            		controller.init(files);					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
             }
         });
         
+	}
+
+	private static String[] processPath(String[] args) {
+		List<String> files = new ArrayList<String>(); 
+		for(String filename : args){
+			if(new File(filename).exists()){
+				files.add(filename);
+			}else if(new File(buildPath(filename)).exists()){
+				files.add(buildPath(filename));
+			}
+		}
+		return files.toArray(new String[]{});
+	}
+	
+	private static String buildPath() {
+		String spath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		if(spath.indexOf(".jar") > 0){
+			spath = String.format("%s%s%s",(spath.substring(0,spath.lastIndexOf(File.separator))),File.separator,spath);
+		}
+		System.out.println("### spath: " + spath);
+		return spath;
+	}
+	
+	private static  String buildPath(String name) {
+		return String.format("%s%s%s", buildPath(),File.separator,name);
 	}
 
 }

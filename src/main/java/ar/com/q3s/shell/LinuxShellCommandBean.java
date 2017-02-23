@@ -28,7 +28,7 @@ public class LinuxShellCommandBean implements ShellCommand {
 			while (((line = reader.readLine())!= null) && pid == null) {
 				if(line.indexOf(command) != -1){
 					String[] row = line.split(" ");
-					pid = row[0];
+					pid = row[0].isEmpty() ? row[1] : row[0]; 
 				}
 			}
 		} catch (Exception e) {
