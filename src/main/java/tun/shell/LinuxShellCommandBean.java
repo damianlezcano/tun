@@ -6,17 +6,14 @@ import java.io.InputStreamReader;
 
 public class LinuxShellCommandBean implements ShellCommand {
 
-	@Override
 	public void kill(String command) throws IOException {
 		Runtime.getRuntime().exec(new String[]{"kill","-9",command});
 	}
 
-	@Override
 	public void open(String command) throws IOException {
-		Runtime.getRuntime().exec("x-terminal-emulator -e " + command);
+		Runtime.getRuntime().exec(command);
 	}
 
-	@Override
 	public String pid(String command) throws IOException {
 		Process p;
 		String pid = null;
@@ -25,7 +22,7 @@ public class LinuxShellCommandBean implements ShellCommand {
 			p.waitFor();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line = "";
-			while (((line = reader.readLine())!= null) && pid == null) {
+			while ((line = reader.readLine())!= null) {
 				if(line.indexOf(command) != -1){
 					String[] row = line.trim().split(" ");
 					pid = row[0]; 

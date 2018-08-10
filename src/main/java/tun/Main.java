@@ -23,7 +23,6 @@ import java.util.TreeMap;
 import javax.swing.JCheckBox;
 import javax.swing.JSeparator;
 
-import tun.shell.LinuxShellCommandBean;
 import tun.shell.ShellCommand;
 import tun.shell.ShellCommandFactory;
 
