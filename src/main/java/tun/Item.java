@@ -5,6 +5,8 @@
  */
 package tun;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 
 import javax.swing.JCheckBox;
@@ -18,6 +20,8 @@ import tun.shell.ShellCommand;
  */
 public class Item extends javax.swing.JPanel {
 
+	private Main main;
+	
     /**
      * Creates new form NewJPanel
      */
@@ -39,15 +43,35 @@ public class Item extends javax.swing.JPanel {
         lblDescription = new javax.swing.JLabel();
         checkbox = new javax.swing.JCheckBox();
 
+        checkbox.addKeyListener(new KeyListener() {
+			@Override
+			public void keyTyped(KeyEvent e) {
+				
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {
+		        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+		        	main.borrarFiltro();
+		        	main.getView().getTextField().setVisible(false);
+		        	main.getView().getTextField().setText("");
+		        	main.getView().pack();
+		        }
+			}
+			@Override
+			public void keyPressed(KeyEvent e) {
+				
+			}
+		});
+        
         bgNotSelect();
 
         lblIcon.setIcon(new javax.swing.ImageIcon(getClass().getClassLoader().getResource("offline.png"))); // NOI18N
 
         lblTitle.setFont(new java.awt.Font("Arial", 0, 11)); // NOI18N
-        lblTitle.setText("ssh -L 5000:192.168.1.199:5000 lberetta@192.168.1.199");
+//        lblTitle.setText("ssh -L 5000:192.168.1.199:5000 lberetta@192.168.1.199");
 
         lblDescription.setFont(new java.awt.Font("Arial", 1, 11)); // NOI18N
-        lblDescription.setText("mercadolibre");
+//        lblDescription.setText("mercadolibre");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -78,10 +102,6 @@ public class Item extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>                        
-
-    private void checkboxActionPerformed(java.awt.event.ActionEvent evt) {                                         
-        // TODO add your handling code here:
-    }                                        
 
     // Variables declaration - do not modify                     
     private javax.swing.JCheckBox checkbox;
@@ -141,5 +161,18 @@ public class Item extends javax.swing.JPanel {
 	
 	public void bgSelect(){
 		setBackground(new java.awt.Color(236, 236, 236));
+	}
+	
+	@Override
+	public String toString() {
+		return lblDescription.getText() + " " + lblTitle.getText();
+	}
+
+	public Main getMain() {
+		return main;
+	}
+
+	public void setMain(Main main) {
+		this.main = main;
 	}
 }

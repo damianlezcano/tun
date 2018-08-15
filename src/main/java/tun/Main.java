@@ -6,12 +6,14 @@
 package tun;
 
 import java.awt.Component;
+import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,9 +34,9 @@ import tun.shell.ShellCommandFactory;
  */
 public class Main {
 
-	private static final long SCANNER_SLEEP = 500;
+	private static final long SCANNER_PROCESS_SLEEP = 500;
 
-	private View view = new View();
+	private View view = new View(this);
 	
 	private ShellCommand shell;
 	
@@ -46,19 +48,7 @@ public class Main {
 		//Proceso el archivo pasado como parametro
 		hosts = readHosts(files);
 		
-		Iterator itKey = hosts.entrySet().iterator();
-		while (itKey.hasNext()) {
-			Entry<String,Set<String>> entryKey = (Entry<String,Set<String>>)itKey.next();
-			Iterator itHost = entryKey.getValue().iterator();
-			while (itHost.hasNext()) {
-				String entryHost = (String)itHost.next();
-				Item item = build(entryHost,entryKey.getKey());
-				view.getPnlContainer().add(item);
-				if(itKey.hasNext() || itHost.hasNext()){
-					view.getPnlContainer().add(new JSeparator());					
-				}
-			}
-		}
+		dibujarLista();
 
 		view.setVisible(true);
 		view.pack();
@@ -72,7 +62,7 @@ public class Main {
 		            				((Item)component).evaluatePid(shell);
 		            			}
 		            		}
-		            		Thread.sleep(SCANNER_SLEEP);
+		            		Thread.sleep(SCANNER_PROCESS_SLEEP);
 	            		} catch (Exception e) {
 	            			e.printStackTrace();
 	            		}
@@ -82,8 +72,33 @@ public class Main {
 		
 	}
 
+	private void dibujarLista(Map<String, Set<String>> hosts) {
+		try {
+			Iterator itKey = hosts.entrySet().iterator();
+			while (itKey.hasNext()) {
+				Entry<String,Set<String>> entryKey = (Entry<String,Set<String>>)itKey.next();
+				Iterator itHost = entryKey.getValue().iterator();
+				while (itHost.hasNext()) {
+					String entryHost = (String)itHost.next();
+					Item item = build(entryHost,entryKey.getKey());
+					view.getPnlContainer().add(item);
+					if(itKey.hasNext() || itHost.hasNext()){
+						view.getPnlContainer().add(new JSeparator());					
+					}
+				}
+			}		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void dibujarLista() {
+		dibujarLista(hosts);
+	}
+
 	public Item build(String title, String description) throws IOException{
 		Item item = new Item();
+		item.setMain(this);
 		item.getLblTitle().setText(title);
 		item.getLblDescription().setText(description);
 		item.evaluatePid(shell);
@@ -148,11 +163,11 @@ public class Main {
 		while ((strLine = br.readLine()) != null) {
 			if(!strLine.isEmpty()){
 				if (strLine.startsWith("#")) {
-					key = strLine;
+					key = strLine + " ("+ new File(filename).getName() + ")";
 				} else {
 					Set<String> collection = map.containsKey(key) ? map.get(key) : new HashSet<String>();
 					if(!collection.contains(strLine)){
-						collection.add(strLine);
+						collection.add(strLine.trim());
 					}
 					map.put(key, collection);
 				}
@@ -211,6 +226,62 @@ public class Main {
 	
 	private static  String buildPath(String name) {
 		return String.format("%s%s%s", buildPath(),File.separator,name);
+	}
+
+	public void jframeKeyPressed(KeyEvent e) {
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+        	view.getTextField().setVisible(true);
+        	view.pack();
+        	view.getTextField().requestFocus();
+        }
+        
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        	borrarFiltro();
+        	view.getTextField().setVisible(false);
+        	view.getTextField().setText("");
+        	view.pack();
+        }
+	}
+	
+	public void borrarFiltro() {
+		view.getPnlContainer().removeAll();
+		dibujarLista();
+	}
+	
+	public void filtrar(String txt) {
+
+		view.getPnlContainer().removeAll();
+
+		if(txt.isEmpty()) {
+			borrarFiltro();
+		}else {
+			Map<String, Set<String>> nHosts = new HashMap<String, Set<String>>();
+			
+			for(Entry<String, Set<String>> entry : hosts.entrySet()) {
+				if(entry.getKey().indexOf(txt) != -1) {
+					nHosts.put(entry.getKey(), entry.getValue());
+				}else {
+					for(String item : entry.getValue()) {
+						if(item.indexOf(txt) != -1) {
+							if(nHosts.containsKey(entry.getKey())) {
+								nHosts.get(entry.getKey()).add(item);
+							}else{
+								Set<String> list = new HashSet<String>();
+								list.add(item);
+								nHosts.put(entry.getKey(), list);								
+							}
+						}
+					}
+				}
+			}
+			dibujarLista(nHosts);			
+		}
+		
+		view.pack();
+	}
+
+	public View getView() {
+		return view;
 	}
 
 }
